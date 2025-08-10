@@ -29,7 +29,7 @@ A Python tool that analyzes git commit history across multiple projects and gene
 
 2. **Install dependencies**
    ```bash
-   pip install openai python-dotenv
+   pip install -r requirements.txt
    ```
 
 3. **Create a `.env` file** in the project directory:
