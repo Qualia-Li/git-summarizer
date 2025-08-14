@@ -240,16 +240,10 @@ def main() -> str:
             print("Invalid date format. Please use YYYY-MM-DD.")
     
     # Get projects folder
-    default_folder = "~/proj"
-    if len(sys.argv) > 1:
-        projects_folder = sys.argv[1]
-    else:
-        projects_folder = input(f"\nEnter projects folder path (default: {default_folder}): ").strip()
-        if not projects_folder:
-            projects_folder = default_folder
+    workspace_folder = os.getenv("WORKSPACE_FOLDER", "~/workspace")
     
     print(f"\nUsing date: {selected_date}")
-    print(f"Using projects folder: {projects_folder}")
+    print(f"Using workspace folder: {workspace_folder}")
     
     # Check for author filter
     author_filter = os.getenv("AUTHOR_FILTER", "").strip()
@@ -265,7 +259,7 @@ def main() -> str:
     summarizer = GitHistorySummarizer(azure_key, endpoint)
     
     try:
-        summary = summarizer.run(projects_folder, selected_date)
+        summary = summarizer.run(workspace_folder, selected_date)
         print("\n" + "="*60)
         print("GIT HISTORY SUMMARY")
         print("="*60)
