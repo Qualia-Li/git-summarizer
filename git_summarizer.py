@@ -24,8 +24,10 @@ from typing import List, Dict, Any
 from openai import AzureOpenAI
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv(".env")
+# Load environment variables from .env file in the same directory as this script
+script_dir = Path(__file__).parent
+env_file = script_dir / ".env"
+load_dotenv(env_file)
 
 class GitHistorySummarizer:
     def __init__(self, azure_key: str = None, endpoint: str = None):
@@ -139,7 +141,7 @@ class GitHistorySummarizer:
                         "content": """You are a helpful assistant that summarizes git commit history. 
                         This is the commitment message by one person on different projects
                         Analyze the commits and provide a concise summary in no more than 4 sentences.
-                        Don't need to be too detailed. Just give a high level overview. 
+                        Don't need to be too detailed. Just give a high level overview. Mention how many commits were made and what was done.
                         Talk more about features and products than technical details.
                         
                         Keep the summary professional and informative."""
