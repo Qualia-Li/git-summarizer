@@ -17,7 +17,7 @@ import os
 import sys
 import subprocess
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List, Dict, Any
 
@@ -66,17 +66,21 @@ class GitHistorySummarizer:
         try:
             # Change to project directory
             os.chdir(project_path)
-            
+
             # Get author filter from environment
             author_filter = os.getenv("AUTHOR_FILTER", "").strip()
-            
+
+            # Get local timezone offset to ensure git uses local time
+            local_tz = datetime.now().astimezone().strftime('%z')
+
             # Get git log with detailed information for a specific date
+            # Use --date=format-local to display dates in local timezone
             cmd = [
-                "git", "log", 
-                "--since", f"{date} 00:00:00",
-                "--until", f"{date} 23:59:59",
+                "git", "log",
+                "--since", f"{date} 00:00:00 {local_tz}",
+                "--until", f"{date} 23:59:59 {local_tz}",
                 "--pretty=format:%H|%an|%ad|%s|%b",
-                "--date=short",
+                "--date=format-local:%Y-%m-%d",
                 "--all"
             ]
             
@@ -244,7 +248,13 @@ def main() -> str:
     # Get projects folder
     workspace_folder = os.getenv("WORKSPACE_FOLDER", "~/workspace")
     
-    print(f"\nUsing date: {selected_date}")
+    # Get local timezone and current time for display
+    now = datetime.now().astimezone()
+    local_tz = now.strftime('%Z (%z)')
+    current_time = now.strftime('%Y-%m-%d %H:%M:%S')
+
+    print(f"\nCurrent time: {current_time} {local_tz}")
+    print(f"Selected date: {selected_date}")
     print(f"Using workspace folder: {workspace_folder}")
     
     # Check for author filter
