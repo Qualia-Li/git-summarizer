@@ -41,6 +41,8 @@ class GitHistorySummarizer:
             api_version=os.getenv("AZURE_API_VERSION", "2024-02-15-preview"),
             azure_endpoint=self.endpoint,
             azure_deployment="gpt-4o-2",
+            timeout=60.0,
+            max_retries=2,
         )
         
     def get_git_projects(self, projects_folder: str) -> List[str]:
