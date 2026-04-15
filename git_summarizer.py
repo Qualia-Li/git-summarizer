@@ -277,6 +277,10 @@ def main() -> str:
         print("="*60)
         print(summary)
 
+        import subprocess
+        subprocess.run(["pbcopy"], input=summary.encode(), check=True)
+        print("\n✅ Summary copied to clipboard.")
+
         return summary
         
     except Exception as e:
