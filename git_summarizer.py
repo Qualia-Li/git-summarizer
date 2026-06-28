@@ -36,11 +36,13 @@ class GitHistorySummarizer:
         self.azure_key = azure_key or os.getenv("AZURE_OPENAI_KEY")
         self.endpoint = endpoint or os.getenv("AZURE_ENDPOINT")
 
+        self.azure_deployment = os.getenv("AZURE_DEPLOYMENT", "gpt-5.5-2")
+
         self.client = AzureOpenAI(
             api_key=self.azure_key,
             api_version=os.getenv("AZURE_API_VERSION", "2024-02-15-preview"),
             azure_endpoint=self.endpoint,
-            azure_deployment="gpt-4o-2",
+            azure_deployment=self.azure_deployment,
             timeout=60.0,
             max_retries=2,
         )
@@ -139,9 +141,10 @@ class GitHistorySummarizer:
     def summarize_with_azure_openai(self, content: str, date: str) -> str:
         """Summarize the git history using Azure OpenAI API."""
         try:
-            response = self.client.chat.completions.create(
-                model=os.getenv("AZURE_MODEL", "gpt-4"),
-                messages=[
+            model = os.getenv("AZURE_MODEL", self.azure_deployment)
+            request_args = {
+                "model": model,
+                "messages": [
                     {
                         "role": "system",
                         "content": """You are a helpful assistant that summarizes git commit history. 
@@ -157,8 +160,16 @@ class GitHistorySummarizer:
                         "content": f"Please summarize the following git commit history on {date}:\n\n{content}"
                     }
                 ],
-                max_tokens=int(os.getenv("MAX_TOKENS", "1000")),
-                temperature=float(os.getenv("TEMPERATURE", "0.3"))
+            }
+
+            if model.startswith("gpt-5") or self.azure_deployment.startswith("gpt-5"):
+                request_args["max_completion_tokens"] = int(os.getenv("MAX_COMPLETION_TOKENS", os.getenv("MAX_TOKENS", "1000")))
+            else:
+                request_args["max_tokens"] = int(os.getenv("MAX_TOKENS", "1000"))
+                request_args["temperature"] = float(os.getenv("TEMPERATURE", "0.3"))
+
+            response = self.client.chat.completions.create(
+                **request_args
             )
             
             return response.choices[0].message.content
