@@ -26,8 +26,8 @@ from dotenv import load_dotenv
 
 # Load environment variables from .env file in the same directory as this script
 script_dir = Path(__file__).parent
-env_file = script_dir / ".env"
-load_dotenv(env_file)
+load_dotenv(script_dir / ".env")  # local wins
+load_dotenv(Path.home() / ".claude" / ".env.global")  # fallback (override=False)
 
 class GitHistorySummarizer:
     def __init__(self, azure_key: str = None, endpoint: str = None):
@@ -36,7 +36,7 @@ class GitHistorySummarizer:
         self.azure_key = azure_key or os.getenv("AZURE_OPENAI_KEY")
         self.endpoint = endpoint or os.getenv("AZURE_ENDPOINT")
 
-        self.azure_deployment = os.getenv("AZURE_DEPLOYMENT", "gpt-5.5-2")
+        self.azure_deployment = os.getenv("AZURE_DEPLOYMENT", "gpt-5.5-1")
 
         self.client = AzureOpenAI(
             api_key=self.azure_key,
