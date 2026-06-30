@@ -138,7 +138,7 @@ class GitHistorySummarizer:
             
         return formatted
     
-    def summarize_with_azure_openai(self, content: str, date: str) -> str:
+    def summarize_with_azure_openai(self, content: str, date: str, total_commits: int, project_count: int) -> str:
         """Summarize the git history using Azure OpenAI API."""
         try:
             model = os.getenv("AZURE_MODEL", self.azure_deployment)
@@ -147,17 +147,19 @@ class GitHistorySummarizer:
                 "messages": [
                     {
                         "role": "system",
-                        "content": """You are a helpful assistant that summarizes git commit history. 
+                        "content": """You are a helpful assistant that summarizes git commit history.
                         This is the commitment message by one person on different projects
                         Analyze the commits and provide a concise summary in no more than 4 sentences.
-                        Don't need to be too detailed. Just give a high level overview. Mention how many commits were made and what was done.
+                        Don't need to be too detailed. Just give a high level overview.
                         Talk more about features and products than technical details.
-                        
+                        Do NOT count commits yourself — the exact commit and project counts are given to you; use those numbers verbatim.
+
                         Keep the summary professional and informative."""
                     },
                     {
                         "role": "user",
-                        "content": f"Please summarize the following git commit history on {date}:\n\n{content}"
+                        "content": f"On {date}, exactly {total_commits} commits were made across {project_count} projects. "
+                                   f"Use these exact numbers in your summary. Here is the commit history:\n\n{content}"
                     }
                 ],
             }
@@ -195,14 +197,16 @@ class GitHistorySummarizer:
         # Collect all commit data
         all_commits_data = ""
         total_commits = 0
-        
+        projects_with_commits = 0
+
         for project_path in git_projects:
             project_name = os.path.basename(project_path)
             # print(f"Processing: {project_name}")
-            
+
             commits = self.get_git_log(project_path, date)
             total_commits += len(commits)
             if commits:
+                projects_with_commits += 1
                 print(f"Found {len(commits)} commits in {project_name}")
                 for commit in commits:
                     print(f"\t{commit['date']}\t{commit['author']}\tCommit: {commit['subject']}")
@@ -217,7 +221,7 @@ class GitHistorySummarizer:
         print("Generating summary with Azure OpenAI...")
         
         # Generate summary using Azure OpenAI
-        summary = self.summarize_with_azure_openai(all_commits_data, date)
+        summary = self.summarize_with_azure_openai(all_commits_data, date, total_commits, projects_with_commits)
         
         return summary
 
