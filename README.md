@@ -36,7 +36,7 @@ A Python tool that analyzes git commit history across multiple projects and gene
    ```env
    AZURE_OPENAI_KEY=your_azure_openai_key_here
    AZURE_ENDPOINT=https://your-resource.openai.azure.com/
-   AZURE_DEPLOYMENT=gpt-5.5
+   AZURE_DEPLOYMENT=gpt-5.5-codex
    AUTHOR_FILTER=comma,separated,author,names
    ```
 

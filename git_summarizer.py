@@ -175,7 +175,9 @@ class GitHistorySummarizer:
             return response.choices[0].message.content
             
         except Exception as e:
-            return f"Error generating summary with Azure OpenAI: {e}"
+            # Raise (don't return the error AS the summary) so main() exits nonzero and never
+            # prints/pbcopies the failure as if it were a real summary.
+            raise RuntimeError(f"Azure OpenAI summary generation failed: {e}") from e
     
     def run(self, projects_folder: str, date: str) -> str:
         """Main method to run the git history summarization."""
