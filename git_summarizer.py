@@ -36,7 +36,7 @@ class GitHistorySummarizer:
         self.azure_key = azure_key or os.getenv("AZURE_OPENAI_KEY")
         self.endpoint = endpoint or os.getenv("AZURE_ENDPOINT")
 
-        self.azure_deployment = os.getenv("AZURE_DEPLOYMENT", "gpt-5.5-1")
+        self.azure_deployment = os.getenv("AZURE_DEPLOYMENT", "gpt-5.5-codex")
 
         self.client = AzureOpenAI(
             api_key=self.azure_key,
