@@ -5,11 +5,11 @@ Git History Summarizer
 Usage: python git_summarizer.py --date 2024-01-01 --projects-folder /path/to/projects
 
 This program checks git history across all projects in a specified folder
-and summarizes the commits using Azure OpenAI API.
+and summarizes the commits using the OpenAI API.
 
 Optional: Create a .env file with:
-AZURE_OPENAI_KEY=your_key_here
-AZURE_ENDPOINT=https://your-resource.openai.azure.com/
+OPENAI_API_KEY=your_key_here
+OPENAI_MODEL=gpt-5.5
 AUTHOR_FILTER=comma,separated,author,names
 """
 
@@ -21,7 +21,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List, Dict, Any
 
-from openai import AzureOpenAI
+from openai import OpenAI
 from dotenv import load_dotenv
 
 # Load environment variables from .env file in the same directory as this script
@@ -30,22 +30,15 @@ load_dotenv(script_dir / ".env")  # local wins
 load_dotenv(Path.home() / ".claude" / ".env.global")  # fallback (override=False)
 
 class GitHistorySummarizer:
-    def __init__(self, azure_key: str = None, endpoint: str = None):
-        """Initialize the summarizer with Azure OpenAI credentials."""
-        # Use provided credentials or defaults from environment
-        self.azure_key = azure_key or os.getenv("AZURE_OPENAI_KEY")
-        self.endpoint = endpoint or os.getenv("AZURE_ENDPOINT")
-
-        self.azure_deployment = os.getenv("AZURE_DEPLOYMENT", "gpt-5.5-codex")
-
-        self.client = AzureOpenAI(
-            api_key=self.azure_key,
-            api_version=os.getenv("AZURE_API_VERSION", "2024-02-15-preview"),
-            azure_endpoint=self.endpoint,
-            azure_deployment=self.azure_deployment,
+    def __init__(self, openai_key: str = None):
+        """Initialize the summarizer with OpenAI credentials."""
+        self.openai_key = openai_key or os.getenv("OPENAI_API_KEY")
+        self.model = os.getenv("OPENAI_MODEL", "gpt-5.5")
+        self.client = OpenAI(
+            api_key=self.openai_key,
             timeout=60.0,
             max_retries=2,
-        )
+        ) if self.openai_key else None
         
     def get_git_projects(self, projects_folder: str) -> List[str]:
         """Find all git repositories in the projects folder."""
@@ -138,12 +131,13 @@ class GitHistorySummarizer:
             
         return formatted
     
-    def summarize_with_azure_openai(self, content: str, date: str, total_commits: int, project_count: int) -> str:
-        """Summarize the git history using Azure OpenAI API."""
+    def summarize_with_openai(self, content: str, date: str, total_commits: int, project_count: int) -> str:
+        """Summarize the git history using OpenAI API."""
         try:
-            model = os.getenv("AZURE_MODEL", self.azure_deployment)
+            if not self.client:
+                raise RuntimeError("OPENAI_API_KEY not found in environment variables")
             request_args = {
-                "model": model,
+                "model": self.model,
                 "messages": [
                     {
                         "role": "system",
@@ -164,7 +158,7 @@ class GitHistorySummarizer:
                 ],
             }
 
-            if model.startswith("gpt-5") or self.azure_deployment.startswith("gpt-5"):
+            if self.model.startswith("gpt-5"):
                 request_args["max_completion_tokens"] = int(os.getenv("MAX_COMPLETION_TOKENS", os.getenv("MAX_TOKENS", "1000")))
             else:
                 request_args["max_tokens"] = int(os.getenv("MAX_TOKENS", "1000"))
@@ -179,7 +173,7 @@ class GitHistorySummarizer:
         except Exception as e:
             # Raise (don't return the error AS the summary) so main() exits nonzero and never
             # prints/pbcopies the failure as if it were a real summary.
-            raise RuntimeError(f"Azure OpenAI summary generation failed: {e}") from e
+            raise RuntimeError(f"OpenAI summary generation failed: {e}") from e
     
     def run(self, projects_folder: str, date: str) -> str:
         """Main method to run the git history summarization."""
@@ -218,10 +212,9 @@ class GitHistorySummarizer:
             return "No commits found in the specified date range across all projects."
         
         print(f"Total commits found: {total_commits}")
-        print("Generating summary with Azure OpenAI...")
+        print("Generating summary with OpenAI...")
         
-        # Generate summary using Azure OpenAI
-        summary = self.summarize_with_azure_openai(all_commits_data, date, total_commits, projects_with_commits)
+        summary = self.summarize_with_openai(all_commits_data, date, total_commits, projects_with_commits)
         
         return summary
 
@@ -285,9 +278,7 @@ def main() -> str:
         print("No author filter applied (showing all authors)")
     
     # Create summarizer and run
-    azure_key = os.getenv("AZURE_OPENAI_KEY")
-    endpoint = os.getenv("AZURE_ENDPOINT")
-    summarizer = GitHistorySummarizer(azure_key, endpoint)
+    summarizer = GitHistorySummarizer()
     
     try:
         summary = summarizer.run(workspace_folder, selected_date)

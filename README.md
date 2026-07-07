@@ -1,13 +1,13 @@
 # Git History Summarizer
 
-A Python tool that analyzes git commit history across multiple projects and generates intelligent summaries using Azure OpenAI API.
+A Python tool that analyzes git commit history across multiple projects and generates intelligent summaries using the OpenAI API.
 
 ## Features
 
 - **Multi-project Analysis**: Scans multiple git repositories in a specified folder
 - **Date-specific Filtering**: Get commits from a specific date or date range
 - **Author Filtering**: Filter commits by specific authors (optional)
-- **AI-powered Summaries**: Uses Azure OpenAI to generate intelligent, concise summaries
+- **AI-powered Summaries**: Uses OpenAI to generate intelligent, concise summaries
 - **Cross-platform**: Works on macOS, Linux, and Windows
 - **Easy Setup**: Simple configuration via environment variables
 
@@ -17,7 +17,7 @@ A Python tool that analyzes git commit history across multiple projects and gene
 
 - Python 3.8 or higher
 - Git installed and accessible from command line
-- Azure OpenAI API access
+- OpenAI API access
 
 ### Setup
 
@@ -34,9 +34,8 @@ A Python tool that analyzes git commit history across multiple projects and gene
 
 3. **Create a `.env` file** in the project directory:
    ```env
-   AZURE_OPENAI_KEY=your_azure_openai_key_here
-   AZURE_ENDPOINT=https://your-resource.openai.azure.com/
-   AZURE_DEPLOYMENT=gpt-5.5-codex
+   OPENAI_API_KEY=your_openai_key_here
+   OPENAI_MODEL=gpt-5.5
    AUTHOR_FILTER=comma,separated,author,names
    ```
 
@@ -76,5 +75,5 @@ AUTHOR_FILTER=John Doe,Jane Smith
 2. **Commit Extraction**: Uses `git log` to extract commits from the specified date
 3. **Author Filtering**: Optionally filters commits by author names
 4. **Data Formatting**: Formats commit data for AI processing
-5. **AI Summarization**: Sends formatted data to Azure OpenAI for intelligent summarization
+5. **AI Summarization**: Sends formatted data to OpenAI for intelligent summarization
 6. **Output**: Displays a concise, professional summary
